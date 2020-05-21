@@ -1,4 +1,23 @@
  var socket = io();
+
+
+ function scrollToBottom () {
+     var message = jQuery('#messages');
+     var newMessage = message.children('li:last-child');
+
+     var clientHeight = message.prop('clientHeight');
+     var scrollTopi = message.prop('scrollTop');
+     var scrollHeight = message.prop('scrollHeight');
+     var newMessageHeight = newMessage.innerHeight();
+     var lastMessageHeight = newMessage.prev().innerHeight();
+     
+     if (clientHeight + scrollTopi + newMessageHeight + lastMessageHeight >= scrollHeight)
+     {
+         message.scrollTop(scrollHeight);     //scrollTop is a jQuery method
+     }
+ }
+
+
  socket.on('connect', function () {
      console.log('connected to the server');
  });
@@ -6,13 +25,18 @@
      console.log('server closed');
  });
 
- socket.on('newMessage' ,function (received_data) {
-    // console.log('new message form server',received_data);
-    
+socket.on('newMessage' ,function (received_data) {
 
-    var li = jQuery('<li></li>');
-    li.text(`${received_data.from} : ${received_data.text}`);
-    jQuery('#messages').append(li);
+    var formattedTime = moment().format('LT');
+    var template = jQuery('#message-template').html();
+    var html=Mustache.render(template,{
+        text : received_data.text,
+        from : received_data.from,
+        createdAt : formattedTime
+    });
+
+    jQuery('#messages').append(html);
+    scrollToBottom();
  });
 
 
@@ -54,12 +78,17 @@ userLocation.on('click',function() {
 
 });
 
-socket.on('newLocationMessage', function (data) {
+socket.on('newLocationMessage', function (received_data) {
     // console.log(data);
-    var li = jQuery('<li></li>');
-    var a = jQuery('<a target="_blank">My current Location</a>');
-    li.text(`${data.from} : `);
-    a.attr('href',data.url);
-    li.append(a);
-    jQuery('#messages').append(li);
+    var formattedTime = moment().format('LT');
+    
+
+    var template = jQuery('#location-message-template').html();
+    var html = Mustache.render(template,{
+        url : received_data.url,
+        from : received_data.from,
+        createdAt : formattedTime
+    });
+    jQuery('#messages').append(html);
+    scrollToBottom();
 });

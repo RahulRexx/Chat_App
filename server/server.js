@@ -29,9 +29,13 @@ io.on('connection',(socket)=> {
        }
 
        socket.join(received_data.room);
-    //    users.removeUser(socket.id);
-    //    users.addUser(socket.id,received_data.name,received_data.room);
-    //    io.to(received_data.room).emit('updateUserList',users.getUserList(received_data.room));
+
+       users.removeUser(socket.id);
+
+       var newuser = users.addUser(socket.id,received_data.name,received_data.room);
+    //    console.log(newuser);
+
+       io.to(received_data.room).emit('updateUserList',users.getUserList(received_data.room));
        socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
        socket.broadcast.to(received_data.room).emit('newMessage', generateMessage('Admin', `${received_data.name} has joined the room`));
 
@@ -41,26 +45,37 @@ io.on('connection',(socket)=> {
 
     socket.on('createMessage',  (received_data,callback) => {
         console.log('createMessage from client',received_data);
+        var user = users.getUser(socket.id);
 
-        io.emit('newMessage', generateMessage(received_data.from, received_data.text));
+        if (user && isValidStringValue(received_data.text))
+        {
+            io.to(user.room).emit('newMessage', generateMessage(user.name, received_data.text));
+        }
+
+        
         callback();
 
     });
 
     socket.on('createLocationMessage',(position) => {
-        io.emit('newLocationMessage', generateLocationMessage('AdminLoc', position.latitude, position.longitude));
+        var user = users.getUser(socket.id);
+        if(user)
+        {
+            io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, position.latitude, position.longitude));
+        }
+        
 
     });
    
     socket.on('disconnect',() => {
         console.log('client disconnected');
-        // var user = users.removeUser(socket.id);
-        // console.log(user);
-        // if(user)
-        // {
-        //     io.to(user.room).emit('updateUserList',users.getUserList(user.room));
-        //     io.to(user.room).emit('newMessage',generateMessage('Admin',`${user.name} has left the room`));
-        // }
+        var user = users.removeUser(socket.id);
+        // console.log(user,socket.id);
+        if(user)
+        {
+            io.to(user.room).emit('updateUserList',users.getUserList(user.room));
+            io.to(user.room).emit('newMessage',generateMessage('Admin',`${user.name} has left the room`));
+        }
     })
 });
 

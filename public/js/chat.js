@@ -49,9 +49,15 @@ socket.on('newMessage' ,function (received_data) {
     scrollToBottom();
  });
 
-//  socket.on('updateUserList', function (received_data) {
-//      console.log(received_data);
-//  });
+ socket.on('updateUserList', function (received_data) {
+     console.log(received_data);
+     var ol = jQuery('<ol></ol>');
+     received_data.forEach( function (user) {
+         ol.append(jQuery('<li></li>').text(user));
+     });
+     jQuery('#users').html(ol); //= ol;
+
+ });
 
 
  jQuery('#message-form').on('submit',function (e) {
@@ -60,7 +66,7 @@ socket.on('newMessage' ,function (received_data) {
      var textBox = jQuery('[name=message]');
 
      socket.emit('createMessage',{
-         from : 'User',
+        //  from : 'User',
          text: textBox.val()
      },function (data) {
          textBox.val('');

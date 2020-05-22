@@ -20,7 +20,17 @@
 
  socket.on('connect', function () {
      console.log('connected to the server');
+     var value = jQuery.deparam(window.location.search);
+    //  console.log(val);
+     socket.emit('join',value,function (err) {
+         if(err)
+         {
+             alert(err);
+             window.location.href ='/';
+         }
+     });
  });
+
  socket.on('disconnect', function ()  {
      console.log('server closed');
  });
@@ -39,6 +49,9 @@ socket.on('newMessage' ,function (received_data) {
     scrollToBottom();
  });
 
+//  socket.on('updateUserList', function (received_data) {
+//      console.log(received_data);
+//  });
 
 
  jQuery('#message-form').on('submit',function (e) {
